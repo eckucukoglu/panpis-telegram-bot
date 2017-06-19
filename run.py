@@ -2,13 +2,17 @@
 
 import codecs
 import json
+import logging
 import urllib
 import urllib.parse
 import urllib.request
 
+
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
 
+
+logging.basicConfig(filename='panpis.log', level=logging.DEBUG)
 TELEGRAM_TOKEN = open('.telegram_token').readline()[:-1]
 KNOWLEDGE_API_TOKEN = open('.gcloud_api_token').readline()[:-1]
 KNOWLEDGE_API_URL = 'https://kgsearch.googleapis.com/v1/entities:search'
@@ -16,7 +20,7 @@ KNOWLEDGE_API_URL = 'https://kgsearch.googleapis.com/v1/entities:search'
 START_COMMAND = "start"
 LMK_COMMAND = "lmk"
 
-print("PanpisBot starting...")
+logging.info('PanpisBot starting...')
 
 
 def start(bot, update):
@@ -38,7 +42,7 @@ def let_me_know(bot, update):
     reader = codecs.getreader("utf-8")
     obj = json.load(reader(urllib.request.urlopen(url)))
     items = obj.get("itemListElement", None)
-    # print(obj)
+    # logging.debug(obj)
     final_score = 0
     final_item = None
 
@@ -74,8 +78,9 @@ def let_me_know(bot, update):
             else:
                 response = detailedDescription.get("articleBody", None)
 
-    print(query, " : ", response)
+    logging.info('%s: %s', query, response)
     bot.sendMessage(chat_id=update.message.chat_id, text=response)
+
 
 def lambda_handler(event, context):
     updater = Updater(token=TELEGRAM_TOKEN)
@@ -87,7 +92,7 @@ def lambda_handler(event, context):
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(lmk_handler)
 
-    print("PanpisBot ready to go!")
+    logging.info('PanpisBot ready to go!')
 
     updater.start_polling()
 
